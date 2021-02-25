@@ -10,6 +10,9 @@ plotChannels(LFP.data, LFP) plots raw signal for each channel
 plotSpectrogram(LFP.data, LFP) plots spectrogram for each channel
 plotPwelch(LFP.data, LFP) plots the power spectrum density for each channel
 
+In case a streaming has been disrupted (ie. a loading screen appeared on the tablet), the two recordings (before and after)
+disruption can be concatenated with the concatenateLFP script.
+
 Developped by
 Yohann Thenaisie - Lausanne University Hospital
 Barth Keulen - Leids Universitair Medisch Centrum
