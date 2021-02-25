@@ -35,7 +35,6 @@ for chId = 1:channelParams.nChannels
     ylim([fmin fmax])
     c = colorbar;
     c.Label.String = 'Power/Frequency (dB/Hz)';
-    grid on
     cmax = max(quantile(power2plot, 0.9));
     cmin = min(quantile(power2plot, 0.1));
     caxis([cmin cmax])

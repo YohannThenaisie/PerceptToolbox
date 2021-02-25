@@ -79,7 +79,7 @@ for recId = 1:nTimepoints
     DateTime(recId) = datetime(regexprep(allDays.DateTime{recId}(1:end-1),'T',' '));
 end
 
-% Store LFP in a ctructure
+% Store LFP in a structure
 LFP.time = DateTime;
 LFP.nChannels = nChannels;
 LFP.channel_names = channel_names;
@@ -110,10 +110,13 @@ if isfield(data.DiagnosticData, 'LfpFrequencySnapshotEvents')
         {'cell', 'double', 'cell', 'logical', 'logical', 'cell'},...
         'VariableNames',{'DateTime','EventID','EventName','LFP','Cycling', 'LfpFrequencySnapshotEvents'});
     for eventId = 1:nEvents
-        thisEvent = struct2table(data_events(eventId), 'AsArray', true);
+        if iscell(data_events) %depending on software version
+            thisEvent = struct2table(data_events{eventId}, 'AsArray', true);
+        else
+            thisEvent = struct2table(data_events(eventId), 'AsArray', true);
+        end
         events(eventId, 1:5) = thisEvent(:, 1:5); %remove potential 'LfpFrequencySnapshotEvents'
-        %         if isfield(data_events{eventId}, 'LfpFrequencySnapshotEvents')
-        if isfield(data_events(eventId), 'LfpFrequencySnapshotEvents')
+        if ismember('LfpFrequencySnapshotEvents', thisEvent.Properties.VariableNames)
             for hemisphereId = 1:nHemisphereLocations
                 PSD.FFTBinData(:, hemisphereId) = thisEvent.LfpFrequencySnapshotEvents.(hemisphereLocationNames{hemisphereId}).FFTBinData;
                 PSD.channel_names{hemisphereId} = [hemisphereLocationNames{hemisphereId}(23:end), ' ' thisEvent.LfpFrequencySnapshotEvents.(hemisphereLocationNames{hemisphereId}).SenseID(27:end)];
@@ -127,6 +130,22 @@ if isfield(data.DiagnosticData, 'LfpFrequencySnapshotEvents')
     LFPTrendLogs.events = events;
 end
 
+%Has the stimulation/recording group been changed?
+EventLogs = data.DiagnosticData.EventLogs;
+nEventLogs = size(EventLogs, 1);
+ActiveGroup = table('Size', [1 3],'VariableTypes',{'datetime', 'string', 'string'},...
+    'VariableNames', {'DateTime', 'OldGroupId', 'NewGroupId'});
+rowId = 1;
+for eventId = 1:nEventLogs
+    if isfield(EventLogs{eventId}, 'NewGroupId')
+        DateTime = datetime(regexprep(EventLogs{eventId}.DateTime(1:end-1),'T',' '));
+        OldGroupId = afterPoint(EventLogs{eventId}.OldGroupId);
+        NewGroupId = afterPoint(EventLogs{eventId}.NewGroupId);
+        ActiveGroup(rowId, :) = cell2table({DateTime, OldGroupId, NewGroupId});
+        rowId = rowId+1;
+    end
+end
+
 %Define savename
 savename = [params.SessionDate '_' recordingMode];
 
@@ -135,7 +154,7 @@ channelsFig = plotLFPTrendLogs(LFPTrendLogs);
 savefig(channelsFig, [params.save_pathname filesep savename]);
 
 %Save TrendLogs in one file
-save([params.save_pathname filesep savename '.mat'], 'LFPTrendLogs')
+save([params.save_pathname filesep savename '.mat'], 'LFPTrendLogs', 'ActiveGroup')
 disp([savename ' saved'])
     
 end

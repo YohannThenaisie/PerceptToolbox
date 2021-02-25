@@ -15,21 +15,29 @@ end
 LFPMontage.LFPFrequency = data.LFPMontage{1}.LFPFrequency;
 LFPMontage.LFPMagnitude = NaN(size(LFPMontage.LFPFrequency, 1), nRecordings);
 for recId = 1:nRecordings
-    LFPMontage.channel_names{recId} = [afterPoint(data.LFPMontage{recId}.Hemisphere) ' ' strrep(afterPoint(data.LFPMontage{recId}.SensingElectrodes), '_', ' ')];
+    LFPMontage.hemisphere{recId} = afterPoint(data.LFPMontage{recId}.Hemisphere);
+    LFPMontage.channel_names{recId} = strrep(afterPoint(data.LFPMontage{recId}.SensingElectrodes), '_', ' ');
     LFPMontage.LFPMagnitude(:, recId) = data.LFPMontage{recId}.LFPMagnitude;
     LFPMontage.ArtifactStatus{recId} = afterPoint(data.LFPMontage{recId}.ArtifactStatus);
 end
 
 %define savename
 recNames = data.LfpMontageTimeDomain(1).FirstPacketDateTime;
-savename = ['LFPMontage_' regexprep(char(recNames), {':', '-'}, {''})];
-savename = savename(1:end-5);
+savename = regexprep(char(recNames), {':', '-'}, {''});
+savename = [savename(1:end-5) '_LFPMontage'];
 
 %plot LFP Montage
+LFPMontage.hemisphere = categorical(LFPMontage.hemisphere);
+hemisphereNames = unique(LFPMontage.hemisphere);
+nHemispheres = numel(hemisphereNames);
 channelsFig = figure;
-plot(LFPMontage.LFPFrequency, LFPMontage.LFPMagnitude);
-xlabel('Frequency (Hz)'); ylabel('Power (uVp)'); title('LFPMontage')
-legend(LFPMontage.channel_names)
+for hemisphereId = 1:nHemispheres
+    subplot(nHemispheres, 1, hemisphereId)
+    plot(LFPMontage.LFPFrequency, LFPMontage.LFPMagnitude(:, LFPMontage.hemisphere == hemisphereNames(hemisphereId)));
+    xlabel('Frequency (Hz)'); ylabel('Power (uVp/rtHz)');
+    legend(LFPMontage.channel_names(LFPMontage.hemisphere == hemisphereNames(hemisphereId)))
+    title(hemisphereNames(hemisphereId))
+end
 savefig(channelsFig, [params.save_pathname filesep savename '_LFPMontage']);
 
 %save data

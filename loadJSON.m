@@ -1,7 +1,7 @@
 %Yohann Thenaisie 02.09.2020
 
 addpath(genpath('F:\Percept_Project\Code\percept-toolbox'))
-data_pathname = 'F:\Percept_Project\Data\Rest_IndefiniteStreaming\RestFiles\PW01';
+data_pathname = 'F:\Dystonic_CHUV\DYST02\session4';
 cd(data_pathname)
 
 filenames = ls('*.json');
@@ -18,7 +18,7 @@ for fileId = 1:nFiles
     params.SessionDate = regexprep(data.SessionDate, {':', '-'}, {''});
     params.save_pathname = [data_pathname filesep params.SessionDate(1:end-1)];
     mkdir(params.save_pathname)
-    params.correct4MissingSamples = true;
+    params.correct4MissingSamples = false;
     params.ProgrammerVersion = data.ProgrammerVersion;
     
     if isfield(data, 'IndefiniteStreaming')
@@ -43,11 +43,21 @@ for fileId = 1:nFiles
         
     end
     
-    if isfield(data, 'SenseChannelTests')
+    if isfield(data, 'SenseChannelTests') %Setup OFF stimulation
         
         params.recordingMode = 'SenseChannelTests';
         params.nChannels = 6;
         params.channel_map = [1 2 3 ; 4 5 6];
+        
+        extractLFP(data, params)
+        
+    end
+    
+    if isfield(data, 'CalibrationTests') %Setup ON stimulation
+        
+        params.recordingMode = 'CalibrationTests';
+        params.nChannels = 2;
+        params.channel_map = [1 2];
         
         extractLFP(data, params)
         
@@ -66,9 +76,13 @@ for fileId = 1:nFiles
                 
     end
     
-    if ~isempty(data.MostRecentInSessionSignalCheck)
+    if ~isempty(data.MostRecentInSessionSignalCheck) %Setup
+        
         SignalCheck = data.MostRecentInSessionSignalCheck;
-        figure; hold on
+        save([params.save_pathname filesep 'SignalCheck'], 'SignalCheck')
+
+        h = figure; hold on
+        channel_names = cell(6, 1);
         for chId = 1:6
             plot(SignalCheck(chId).SignalFrequencies, SignalCheck(chId).SignalPsdValues)
             channel_names{chId} = SignalCheck(chId).Channel(19:end);
@@ -76,14 +90,14 @@ for fileId = 1:nFiles
         xlabel('Frequency (Hz)')
         ylabel('uVp/rtHz')
         legend(channel_names)
-        save([params.save_pathname filesep 'SignalCheck'], 'SignalCheck')
+        savefig(h, [params.save_pathname filesep 'SignalCheck'])
         disp('SignalCheck saved')
+        
     end
     
     if isfield(data, 'DiagnosticData') && isfield(data.DiagnosticData, 'LFPTrendLogs')
         
         params.recordingMode = 'LFPTrendLogs';
-        params.patientID = '';
         extractTrendLogs(data, params)
         
     end

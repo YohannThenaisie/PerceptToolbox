@@ -16,12 +16,6 @@ FirstPacketDateTime = categorical(FirstPacketDateTime);
 recNames = unique(FirstPacketDateTime);
 nRecs = numel(recNames);
 
-%In an old version of the tablet's software, TicksInMses accross all recordings were saved in each field
-oldversion = strcmp(params.ProgrammerVersion, '2.0.4584');
-if oldversion
-    TicksInMses = str2num(data.(recordingMode)(1).TicksInMses); %#ok<ST2NM>
-end
-
 %Extract LFPs in a new structure for each recording
 for recId = 1:nRecs
     
@@ -42,12 +36,15 @@ for recId = 1:nRecs
     
     %Extract size of received packets
     GlobalPacketSizes = str2num(datafield(1).GlobalPacketSizes); %#ok<ST2NM>
-    if sum(GlobalPacketSizes) ~= size(LFP.data, 1)
+    if sum(GlobalPacketSizes) ~= size(LFP.data, 1) && strcmpi(recordingMode, 'SenseChannelTests')
        warning([recordingMode ': data length (' num2str(size(LFP.data, 1)) ' samples) differs from the sum of packet sizes (' num2str(sum(GlobalPacketSizes)) ' samples)'])
     end
     
     %Extract timestamps of received packets
-    if ~oldversion, TicksInMses = str2num(datafield(1).TicksInMses); end %#ok<ST2NM>
+    TicksInMses = str2num(datafield(1).TicksInMses); %#ok<ST2NM>
+    if ~isempty(TicksInMses)
+        LFP.firstTickInSec = TicksInMses(1)/1000; %first tick time (s)
+    end 
     
     if ~isempty(TicksInMses) && params.correct4MissingSamples %TicksInMses is empty for SenseChannelTest
         TicksInS = (TicksInMses - TicksInMses(1))/1000; %convert to seconds and initiate at 0
@@ -78,10 +75,7 @@ for recId = 1:nRecs
         if isDataMissing
             LFP = correct4MissingSamples(LFP, TicksInS, GlobalPacketSizes);
         end
-        
-        LFP.firstTickInSec = TicksInMses(1)/1000; %first tick time (s)
-        if oldversion, TicksInMses(1:nPackets) = []; end
-        
+                
     end
     
     LFP.time = (1:length(LFP.data))/LFP.Fs; % [s]
@@ -104,8 +98,8 @@ for recId = 1:nRecs
     savefig(channelsFig, [params.save_pathname filesep savename '_LFP']);
     
     %Plot spectrogram and save figure
-%     spectroFig = plotSpectrogram(LFP.data, LFP);
-%     savefig(spectroFig, [params.save_pathname filesep savename '_spectrogram']);
+    spectroFig = plotSpectrogram(LFP.data, LFP);
+    savefig(spectroFig, [params.save_pathname filesep savename '_spectrogram']);
       
     %save LFPs
     save([params.save_pathname filesep savename '.mat'], 'LFP')
