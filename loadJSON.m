@@ -1,7 +1,12 @@
-%Yohann Thenaisie 02.09.2020
+%LOADJSON loads JSON files, extracts, saves and plots BrainSense, Setup, 
+%Survey, Indefinite Streaming and Timeline data in one folder per session
+%Yohann Thenaisie 02.09.2020 - Lausanne University Hospital (CHUV)
 
+%Set pathname to the Percept Toolbox
 addpath(genpath('C:\Users\yo7587\Dropbox (NeuroRestore)\Dystonia\Code\PerceptToolbox'))
-data_pathname = 'D:\Dropbox (NeuroRestore)\Dystonia\DYST03';
+
+%Set pathname to the folder containing the JSON files
+data_pathname = 'C:\Users\yo7587\Dropbox (NeuroRestore)\Dystonia\Data\DYST03\session2';
 cd(data_pathname)
 
 filenames = ls('*.json');
@@ -18,10 +23,10 @@ for fileId = 1:nFiles
     params.SessionDate = regexprep(data.SessionDate, {':', '-'}, {''});
     params.save_pathname = [data_pathname filesep params.SessionDate(1:end-1)];
     mkdir(params.save_pathname)
-    params.correct4MissingSamples = false;
+    params.correct4MissingSamples = false; %set as 'true' if device synchronization is required
     params.ProgrammerVersion = data.ProgrammerVersion;
     
-    if isfield(data, 'IndefiniteStreaming')
+    if isfield(data, 'IndefiniteStreaming') %Survey Indefinite Streaming
         
         params.recordingMode = 'IndefiniteStreaming';
         params.nChannels = 6;
@@ -31,7 +36,7 @@ for fileId = 1:nFiles
         
     end
     
-    if isfield(data, 'BrainSenseTimeDomain')
+    if isfield(data, 'BrainSenseTimeDomain') %Streaming
         
         params.nChannels = 2;
         params.channel_map = 1:params.nChannels;
@@ -63,7 +68,7 @@ for fileId = 1:nFiles
         
     end
     
-    if isfield(data, 'LFPMontage')
+    if isfield(data, 'LFPMontage') %Survey
         
         %Extract and save LFP Montage PSD
         extractLFPMontage(data, params)
@@ -95,7 +100,7 @@ for fileId = 1:nFiles
         
     end
     
-    if isfield(data, 'DiagnosticData') && isfield(data.DiagnosticData, 'LFPTrendLogs')
+    if isfield(data, 'DiagnosticData') && isfield(data.DiagnosticData, 'LFPTrendLogs') %Timeline and Events
         
         params.recordingMode = 'LFPTrendLogs';
         extractTrendLogs(data, params)
