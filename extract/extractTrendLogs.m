@@ -5,43 +5,6 @@ function extractTrendLogs(data, params)
 % Extract parameters for this recording mode
 recordingMode = params.recordingMode;
 fname = params.fname;
-
-%Find the group that was active
-nGroups = size(data.Groups.Initial, 1);
-for groupId = 1:nGroups
-    if data.Groups.Initial(groupId).ActiveGroup == 1
-        activeGroup = groupId;
-        if isfield(data.Groups.Initial(groupId).ProgramSettings, 'SensingChannel') %not in old versions
-            SensingChannel = data.Groups.Initial(groupId).ProgramSettings.SensingChannel;
-            nChannels = size(SensingChannel, 1);
-        else
-            nChannels = 2;
-        end
-        RateInHertz = data.Groups.Initial(groupId).ProgramSettings.RateInHertz; %stimulation frequency
-    end
-end
-
-%Extract stimulation and recording parameters
-channel_names = cell(nChannels, 1);
-FrequencyInHertz = NaN(nChannels, 1);
-PulseWidthInMicroSecond = NaN(nChannels, 1);
-for channelId = 1:nChannels
-    if isfield(data.Groups.Initial(activeGroup).ProgramSettings, 'SensingChannel')
-        channel_names{channelId} = SensingChannel(channelId).SensingSetup.ChannelSignalResult.Channel;
-        FrequencyInHertz(channelId) = SensingChannel(channelId).SensingSetup.FrequencyInHertz;
-        PulseWidthInMicroSecond(channelId) = SensingChannel(channelId).PulseWidthInMicroSecond;
-    else
-        hemisphereLocationNames = {'LeftHemisphere', 'RightHemisphere'};
-        nHemisphereLocations = numel(hemisphereLocationNames);
-        for hemisphereId = 1:nHemisphereLocations
-            channel_names{channelId} = hemisphereLocationNames{hemisphereId};
-            Programs = data.Groups.Initial(activeGroup).ProgramSettings.(hemisphereLocationNames{hemisphereId}).Programs;
-            FrequencyInHertz(channelId) = Programs.PulseWidthInMicroSecond;
-            PulseWidthInMicroSecond(channelId) = Programs.PulseWidthInMicroSecond;
-        end
-    end
-end
-
 LFP.data = [];
 stimAmp.data = [];
 
@@ -81,20 +44,17 @@ end
 
 % Store LFP in a structure
 LFP.time = DateTime;
-LFP.nChannels = nChannels;
-LFP.channel_names = channel_names;
+LFP.nChannels = nHemisphereLocations;
+LFP.channel_names = hemisphereLocationNames;
 LFP.xlabel = 'Date Time';
 LFP.ylabel = 'LFP band power';
-LFP.FrequencyInHertz = FrequencyInHertz;
 
 %Store stimAmp in a structure
 stimAmp.time = DateTime;
-stimAmp.nChannels = nChannels;
-stimAmp.channel_names = channel_names;
+stimAmp.nChannels = nHemisphereLocations;
+stimAmp.channel_names = hemisphereLocationNames;
 stimAmp.xlabel = 'Date Time';
 stimAmp.ylabel = 'Stimulation amplitude [mA]';
-stimAmp.PulseWidthInMicroSecond = PulseWidthInMicroSecond;
-stimAmp.stimulationFrequency = RateInHertz;
 
 %Store all information in one structure
 LFPTrendLogs.LFP = LFP;
@@ -131,18 +91,32 @@ if isfield(data.DiagnosticData, 'LfpFrequencySnapshotEvents')
 end
 
 %Has the stimulation/recording group been changed?
+GroupHistory = struct2table(data.GroupHistory);
+GroupHistory.SessionDate = cellfun(@(x) datetime(regexprep(x(1:end-1),'T',' ')), GroupHistory.SessionDate);
 EventLogs = data.DiagnosticData.EventLogs;
 nEventLogs = size(EventLogs, 1);
-ActiveGroup = table('Size', [1 3],'VariableTypes',{'datetime', 'string', 'string'},...
-    'VariableNames', {'DateTime', 'OldGroupId', 'NewGroupId'});
 rowId = 1;
 for eventId = 1:nEventLogs
     if isfield(EventLogs{eventId}, 'NewGroupId')
         DateTime = datetime(regexprep(EventLogs{eventId}.DateTime(1:end-1),'T',' '));
         OldGroupId = afterPoint(EventLogs{eventId}.OldGroupId);
         NewGroupId = afterPoint(EventLogs{eventId}.NewGroupId);
-        ActiveGroup(rowId, :) = cell2table({DateTime, OldGroupId, NewGroupId});
+        
+        %Find the stimulation and sensing settings of this new group at this time
+        PreviousProgrammingSession = find(GroupHistory.SessionDate < DateTime, 1, 'first');
+        GroupParams = struct2table(GroupHistory.Groups{PreviousProgrammingSession});
+        GroupParams.GroupId = cellfun(@(x) afterPoint(x), GroupParams.GroupId, 'UniformOutput', false);
+        NewProgramSettings = GroupParams.ProgramSettings(NewGroupId == categorical(GroupParams.GroupId));
+        
+        %Create output table
+        if rowId == 1
+            ActiveGroup = cell2table({DateTime, OldGroupId, NewGroupId, NewProgramSettings},...
+                'VariableNames',{'DateTime' 'OldGroupId' 'NewGroupId' 'NewProgramSettings'});
+        else
+            ActiveGroup(rowId, :) = cell2table({DateTime, OldGroupId, NewGroupId, NewProgramSettings});
+        end
         rowId = rowId+1;
+        
     end
 end
 
@@ -150,7 +124,7 @@ end
 savename = [params.SessionDate '_' recordingMode];
 
 %Plot and save LFP trends
-channelsFig = plotLFPTrendLogs(LFPTrendLogs);
+channelsFig = plotLFPTrendLogs(LFPTrendLogs, ActiveGroup);
 savefig(channelsFig, [params.save_pathname filesep savename]);
 
 %Save TrendLogs in one file

@@ -54,7 +54,7 @@ for groupChange = 1:nGroupChanges
         'facealpha', 0.2,'edgecolor','none');
 end
 title('Active Group')
-ax(LFP.nChannels+1).YAxis.Visible = 'off';
+ax1.XAxis.Visible = 'off';
 
 xlabel(LFP.xlabel);
 linkaxes(ax, 'x')

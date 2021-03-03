@@ -1,7 +1,7 @@
 %Yohann Thenaisie 02.09.2020
 
-addpath(genpath('F:\Percept_Project\Code\percept-toolbox'))
-data_pathname = 'F:\Dystonic_CHUV\DYST02\session4';
+addpath(genpath('C:\Users\yo7587\Dropbox (NeuroRestore)\Dystonia\Code\PerceptToolbox'))
+data_pathname = 'D:\Dropbox (NeuroRestore)\Dystonia\DYST03';
 cd(data_pathname)
 
 filenames = ls('*.json');
