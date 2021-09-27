@@ -102,9 +102,23 @@ for eventId = 1:nEventLogs
         OldGroupId = afterPoint(EventLogs{eventId}.OldGroupId);
         NewGroupId = afterPoint(EventLogs{eventId}.NewGroupId);
         
-        %Find the stimulation and sensing settings of this new group at this time
-        PreviousProgrammingSession = find(GroupHistory.SessionDate < DateTime, 1, 'first');
-        GroupParams = struct2table(GroupHistory.Groups{PreviousProgrammingSession});
+        %Find the stimulation and sensing settings of this new group
+        Groups_PPS = data.Groups.Initial;
+        if iscell(Groups_PPS)
+            nGroups = size(Groups_PPS, 1);
+            GroupParams = table('Size',[nGroups 4], 'VariableTypes',...
+                {'string','logical','struct', 'struct'}, 'VariableNames',...
+                {'GroupId', 'ActiveGroup', 'ProgramSettings', 'GroupSettings'});
+            for groupId = 1:nGroups
+                GroupParams(groupId, :) = struct2table(Groups_PPS{groupId});
+            end
+        else
+            if size(Groups_PPS, 1)
+                GroupParams = struct2table(Groups_PPS, 'AsArray', true);
+            else
+                GroupParams = struct2table(Groups_PPS);
+            end
+        end
         GroupParams.GroupId = cellfun(@(x) afterPoint(x), GroupParams.GroupId, 'UniformOutput', false);
         NewProgramSettings = GroupParams.ProgramSettings(NewGroupId == categorical(GroupParams.GroupId));
         

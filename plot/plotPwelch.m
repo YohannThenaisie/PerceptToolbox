@@ -4,10 +4,10 @@ function [Pxx, F] = plotPwelch(data, params, varargin)
 %Plot Pwelch (PSD along frequencies) for each channel
 %Yohann Thenaisie 25.20.2018
 
-%Compute pWelch with 0.01Hz frequency resolution
-window = round(1*params.Fs); %default
+%Compute pWelch with 0.1Hz frequency resolution
+window = round(5*params.Fs); %default
 noverlap = round(window*0.6); %default
-freqResolution = 1; %Hz
+freqResolution = 0.1; %Hz
 fmin = 1; %Hz
 fmax = params.Fs/2; %Hz
 
@@ -20,6 +20,10 @@ if nargin > 2 && strcmpi(varargin{1}, 'log')
     params.ylabel = 'PSD (dB/Hz)';
 else
     params.ylabel = 'PSD (uV^2/Hz)';
+end
+
+if params.nChannels == 1
+    Pxx = Pxx';
 end
 
 % figure;

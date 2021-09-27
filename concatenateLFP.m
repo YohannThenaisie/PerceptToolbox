@@ -3,8 +3,8 @@
 %disruption.
 %Yohann Thenaisie 15.02.2021
 
-filename1 = '20210124T093405_BrainSenseTimeDomain';
-filename2 = '20210124T093550_BrainSenseTimeDomain';
+filename1 = '20210505T100520_BrainSenseTimeDomain';
+filename2 = '20210505T101029_BrainSenseTimeDomain';
 
 load(filename1) %load recording 1 (chronologically first)
 LFP1 = LFP;

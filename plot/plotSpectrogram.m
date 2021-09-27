@@ -39,7 +39,6 @@ for chId = 1:channelParams.nChannels
     cmin = min(quantile(power2plot, 0.1));
     caxis([cmin cmax])
     title(channelParams.channel_names(chId))
-    
         
 end
 

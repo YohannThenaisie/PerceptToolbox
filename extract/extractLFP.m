@@ -36,7 +36,7 @@ for recId = 1:nRecs
     
     %Extract size of received packets
     GlobalPacketSizes = str2num(datafield(1).GlobalPacketSizes); %#ok<ST2NM>
-    if sum(GlobalPacketSizes) ~= size(LFP.data, 1) && strcmpi(recordingMode, 'SenseChannelTests')
+    if sum(GlobalPacketSizes) ~= size(LFP.data, 1) && ~strcmpi(recordingMode, 'SenseChannelTests') && ~strcmpi(recordingMode, 'CalibrationTests')
        warning([recordingMode ': data length (' num2str(size(LFP.data, 1)) ' samples) differs from the sum of packet sizes (' num2str(sum(GlobalPacketSizes)) ' samples)'])
     end
     
@@ -98,8 +98,12 @@ for recId = 1:nRecs
     savefig(channelsFig, [params.save_pathname filesep savename '_LFP']);
     
     %Plot spectrogram and save figure
-    spectroFig = plotSpectrogram(LFP.data, LFP);
-    savefig(spectroFig, [params.save_pathname filesep savename '_spectrogram']);
+    if isDataMissing %cannot compute Fourier transform on NaN
+        warning('Spectrogram cannot be computed as some samples are missing.')
+    else
+        spectroFig = plotSpectrogram(LFP.data, LFP);
+        savefig(spectroFig, [params.save_pathname filesep savename '_spectrogram']);
+    end
       
     %save LFPs
     save([params.save_pathname filesep savename '.mat'], 'LFP')

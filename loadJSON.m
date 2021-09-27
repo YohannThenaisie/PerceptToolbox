@@ -3,19 +3,17 @@
 %Yohann Thenaisie 02.09.2020 - Lausanne University Hospital (CHUV)
 
 %Set pathname to the Percept Toolbox
-addpath(genpath('C:\Users\yo7587\Dropbox (NeuroRestore)\Dystonia\Code\PerceptToolbox'))
+addpath(genpath('C:\Users\BSI\Dropbox (NeuroRestore)\Dystonia\Code\PerceptToolbox'))
 
 %Set pathname to the folder containing the JSON files
-data_pathname = 'C:\Users\yo7587\Dropbox (NeuroRestore)\Dystonia\Data\DYST03\session2';
+[filenames, data_pathname] = uigetfile('*.json', 'MultiSelect', 'on');
 cd(data_pathname)
 
-filenames = ls('*.json');
-nFiles = size(filenames, 1);
-
+nFiles = size(filenames, 2);
 for fileId = 1:nFiles
     
     %Load JSON file
-    fname = filenames(fileId, :);
+    fname = filenames{fileId};
     data = jsondecode(fileread(fname));
     
     %Create a new folder per JSON file
@@ -23,7 +21,7 @@ for fileId = 1:nFiles
     params.SessionDate = regexprep(data.SessionDate, {':', '-'}, {''});
     params.save_pathname = [data_pathname filesep params.SessionDate(1:end-1)];
     mkdir(params.save_pathname)
-    params.correct4MissingSamples = false; %set as 'true' if device synchronization is required
+    params.correct4MissingSamples = true; %set as 'true' if device synchronization is required
     params.ProgrammerVersion = data.ProgrammerVersion;
     
     if isfield(data, 'IndefiniteStreaming') %Survey Indefinite Streaming
