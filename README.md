@@ -17,9 +17,10 @@ In case a streaming has been disrupted (ie. a loading screen appeared on the tab
 Please cite our article when using our Toolbox:
 Towards adaptive deep brain stimulation: clinical and technical notes on a novel commercial device for chronic brain sensing, Thenaisie et al. J Neural Eng. 2021
 
-## UPDATES
-24.09.2021. Bug fix in extractLFPTrendlogs
-27.09.2021. Allow direct selection of JSON files, bug fix in extractLFP
+## Updates
+- 24.09.2021 Bug fix in extractLFPTrendlogs
+- 27.09.2021 Allow direct selection of JSON files, bug fix in extractLFP
+- 07.12.2021 Bug in file selection
 
 ## Developped by
 Yohann Thenaisie - Lausanne University Hospital

@@ -98,7 +98,7 @@ for recId = 1:nRecs
     savefig(channelsFig, [params.save_pathname filesep savename '_LFP']);
     
     %Plot spectrogram and save figure
-    if isDataMissing %cannot compute Fourier transform on NaN
+    if ~isempty(TicksInMses) && params.correct4MissingSamples && isDataMissing %cannot compute Fourier transform on NaN
         warning('Spectrogram cannot be computed as some samples are missing.')
     else
         spectroFig = plotSpectrogram(LFP.data, LFP);
