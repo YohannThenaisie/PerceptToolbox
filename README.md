@@ -20,7 +20,8 @@ Towards adaptive deep brain stimulation: clinical and technical notes on a novel
 ## Updates
 - 24.09.2021 Bug fix in extractLFPTrendlogs
 - 27.09.2021 Allow direct selection of JSON files, bug fix in extractLFP
-- 07.12.2021 Bug in file selection
+- 07.12.2021 Bug fix in file selection
+- 01.02.2022 Bug fix in extractLFPTrendlogs 
 
 ## Developped by
 Yohann Thenaisie - Lausanne University Hospital
