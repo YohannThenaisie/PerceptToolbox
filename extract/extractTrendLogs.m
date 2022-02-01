@@ -91,11 +91,11 @@ if isfield(data.DiagnosticData, 'LfpFrequencySnapshotEvents')
 end
 
 %Has the stimulation/recording group been changed?
-GroupHistory = struct2table(data.GroupHistory);
-GroupHistory.SessionDate = cellfun(@(x) datetime(regexprep(x(1:end-1),'T',' ')), GroupHistory.SessionDate);
+% GroupHistory = struct2table(data.GroupHistory);
+% GroupHistory.SessionDate = cellfun(@(x) datetime(regexprep(x(1:end-1),'T',' ')), GroupHistory.SessionDate);
 EventLogs = data.DiagnosticData.EventLogs;
 nEventLogs = size(EventLogs, 1);
-rowId = 1;
+ActiveGroup = [];
 for eventId = 1:nEventLogs
     if isfield(EventLogs{eventId}, 'NewGroupId')
         DateTime = datetime(regexprep(EventLogs{eventId}.DateTime(1:end-1),'T',' '));
@@ -123,13 +123,9 @@ for eventId = 1:nEventLogs
         NewProgramSettings = GroupParams.ProgramSettings(NewGroupId == categorical(GroupParams.GroupId));
         
         %Create output table
-        if rowId == 1
-            ActiveGroup = cell2table({DateTime, OldGroupId, NewGroupId, NewProgramSettings},...
-                'VariableNames',{'DateTime' 'OldGroupId' 'NewGroupId' 'NewProgramSettings'});
-        else
-            ActiveGroup(rowId, :) = cell2table({DateTime, OldGroupId, NewGroupId, NewProgramSettings});
-        end
-        rowId = rowId+1;
+        ActiveGroup_temp = cell2table({DateTime, OldGroupId, NewGroupId, NewProgramSettings},...
+            'VariableNames',{'DateTime' 'OldGroupId' 'NewGroupId' 'NewProgramSettings'});
+        ActiveGroup = [ActiveGroup; ActiveGroup_temp];
         
     end
 end
